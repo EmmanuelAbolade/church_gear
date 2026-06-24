@@ -24,24 +24,38 @@ void main() {
       storageService = SecureStorageService(storage: mockStorage);
     });
 
-    test('Should invoke hardware write methods when saving target token signatures', () async {
-      // Arrange: Stub our mock hardware to resolve successfully
-      when(mockStorage.write(key: anyNamed('key'), value: anyNamed('value')))
-          .thenAnswer((_) async => {});
+    test(
+      'Should invoke hardware write methods when saving target token signatures',
+      () async {
+        // Arrange: Stub our mock hardware to resolve successfully
+        when(
+          mockStorage.write(key: anyNamed('key'), value: anyNamed('value')),
+        ).thenAnswer((_) async => {});
 
-      // Act: Trigger our custom service execution wrapper
-      await storageService.persistAuthToken('mock_encrypted_jwt_passport');
+        // Act: Trigger our custom service execution wrapper
+        await storageService.persistAuthToken('mock_encrypted_jwt_passport');
 
-      // Assert: Verify our service passed the data directly to secure hardware keys
-      verify(mockStorage.write(key: 'jwt_auth_token', value: 'mock_encrypted_jwt_passport')).called(1);
-    });
+        // Assert: Verify our service passed the data directly to secure hardware keys
+        verify(
+          mockStorage.write(
+            key: 'jwt_auth_token',
+            value: 'mock_encrypted_jwt_passport',
+          ),
+        ).called(1);
+      },
+    );
 
-    test('Should return empty fallback data frames if a cache check misses', () async {
-      when(mockStorage.read(key: anyNamed('key'))).thenAnswer((_) async => null);
+    test(
+      'Should return empty fallback data frames if a cache check misses',
+      () async {
+        when(
+          mockStorage.read(key: anyNamed('key')),
+        ).thenAnswer((_) async => null);
 
-      final token = await storageService.getAuthToken();
+        final token = await storageService.getAuthToken();
 
-      expect(token, isNull);
-    });
+        expect(token, isNull);
+      },
+    );
   });
 }

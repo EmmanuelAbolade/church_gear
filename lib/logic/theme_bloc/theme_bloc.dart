@@ -17,10 +17,7 @@ class ChangeThemeEvent extends ThemeEvent {
   final AppThemeMode themeMode;
   final bool isDarkMode;
 
-  const ChangeThemeEvent({
-    required this.themeMode,
-    required this.isDarkMode,
-  });
+  const ChangeThemeEvent({required this.themeMode, required this.isDarkMode});
 }
 
 // ============================================================================
@@ -32,10 +29,7 @@ class ThemeState {
   final AppThemeMode themeMode;
   final bool isDarkMode;
 
-  const ThemeState({
-    required this.themeMode,
-    required this.isDarkMode,
-  });
+  const ThemeState({required this.themeMode, required this.isDarkMode});
 
   /// Factory constructor defining our standard configuration parameters.
   factory ThemeState.initial() {
@@ -53,14 +47,12 @@ class ThemeState {
 /// Coordinates incoming aesthetic adjustments and outputs updated layout properties.
 class ThemeBloc extends Bloc<ThemeEvent, ThemeState> {
   ThemeBloc() : super(ThemeState.initial()) {
-    
     // Register our event handler method
     on<ChangeThemeEvent>((event, emit) {
       // Stream out the freshly updated user preference configuration states
-      emit(ThemeState(
-        themeMode: event.themeMode,
-        isDarkMode: event.isDarkMode,
-      ));
+      emit(
+        ThemeState(themeMode: event.themeMode, isDarkMode: event.isDarkMode),
+      );
     });
   }
 }

@@ -34,14 +34,16 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final FlutterSecureStorage _secureStorage;
 
   // Constructor with dependency injection, defaulting to production hardware instance
-  AuthBloc({FlutterSecureStorage? secureStorage}) 
-      : _secureStorage = secureStorage ?? const FlutterSecureStorage(),
-        super(AuthState.initial()) {
-    
+  AuthBloc({FlutterSecureStorage? secureStorage})
+    : _secureStorage = secureStorage ?? const FlutterSecureStorage(),
+      super(AuthState.initial()) {
     on<LoginSuccessEvent>((event, emit) async {
       // 1. Persist the token payload directly to local device encrypted hardware
       if (event.session.jwtToken.isNotEmpty) {
-        await _secureStorage.write(key: 'jwt_auth_token', value: event.session.jwtToken);
+        await _secureStorage.write(
+          key: 'jwt_auth_token',
+          value: event.session.jwtToken,
+        );
       }
       // 2. Stream out the verified state context down to our user interface
       emit(AuthState(session: event.session));

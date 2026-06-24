@@ -6,20 +6,18 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 /// caching, and wiping session credential tokens on the local device.
 class SecureStorageService {
   final FlutterSecureStorage _storage;
-  
+
   // Explicit token lookup key for the hardware keychain matrix
   static const _tokenKey = 'jwt_auth_token';
 
   /// Dependency injection constructor allowing mock instances during test sweeps
-  const SecureStorageService({required FlutterSecureStorage storage}) : _storage = storage;
+  const SecureStorageService({required FlutterSecureStorage storage})
+    : _storage = storage;
 
   /// Safely serializes and encrypts an active user authentication passport
   /// into the device's secure hardware storage tier.
   Future<void> persistAuthToken(String token) async {
-    await _storage.write(
-      key: _tokenKey,
-      value: token,
-    );
+    await _storage.write(key: _tokenKey, value: token);
   }
 
   /// Retrieves the encrypted string payload from the local device cache.

@@ -2,11 +2,7 @@
 
 /// Enumeration defining the absolute authorization tiers across
 /// the Church Gear multi-tenant ecosystem.
-enum UserRole {
-  guest,
-  member,
-  admin
-}
+enum UserRole { guest, member, admin }
 
 /// Representational data entity containing current security tokens,
 /// active tenant tracking keys, and profile access vectors.
@@ -29,7 +25,7 @@ class UserSession {
     // Helper mapper to safely transform raw role strings to robust types
     final roleString = json['userRole'] as String?;
     UserRole evaluatedRole;
-    
+
     switch (roleString?.toLowerCase()) {
       case 'admin':
         evaluatedRole = UserRole.admin;
@@ -50,7 +46,7 @@ class UserSession {
     );
   }
 
-  /// Factory utility generating pristine, restricted-access parameters 
+  /// Factory utility generating pristine, restricted-access parameters
   /// for guest accounts browsing public tenant landing nodes.
   factory UserSession.anonymous() {
     return const UserSession(

@@ -64,3 +64,16 @@ A living ledger of architectural decisions, cryptographic security implementatio
 * **`secure_storage_test.dart`:** Utilized Mockito code generation profiles to verify physical write calls and validation fallback checks against simulated hardware pipelines.
 * **`auth_bloc_test.dart`:** Cross-layer tested mock state streams to guarantee runtime tokens pass down into storage hardware parameters flawlessly.
 * **Status:** 🟢 **100% PASS** (9 total assertions validated successfully across the global test grid).
+
+---
+## 🌐 Sprint 5: Supabase Client SDK, Network Contracts & Secure Env Vault
+**Date:** June 24, 2026
+
+### 🔹 Implementations Completed
+* **SDK Injection:** Installed and configured the official `supabase_flutter` integration package versioning matrix, adjusting parameters to use future-proofed `publishableKey` requirements.
+* **Network Blueprint (`AuthRepository`):** Engineered decoupled abstraction layers isolating network data mapping rules from application logic modules.
+* **Environment Isolation Vault (`.env`):** Integrated `flutter_dotenv` to inject sensitive project credentials at runtime, completely shielding backend API vectors from public repository history via `.gitignore` policies.
+
+### 🔹 Automated Testing Status
+* **`auth_repository_test.dart`:** Verified static compilation contracts and class signature definitions across the network repository tier.
+* **Status:** 🟢 **100% PASS** (10 total assertions validating error-free across the system grid).

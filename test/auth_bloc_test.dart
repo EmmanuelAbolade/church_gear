@@ -28,14 +28,20 @@ void main() {
       'Should persist JWT to local device keychain when LoginSuccessEvent is processed',
       build: () {
         // Stub the write behavior to resolve cleanly
-        when(mockHardware.write(key: anyNamed('key'), value: anyNamed('value')))
-            .thenAnswer((_) async => {});
+        when(
+          mockHardware.write(key: anyNamed('key'), value: anyNamed('value')),
+        ).thenAnswer((_) async => {});
         return AuthBloc(secureStorage: mockHardware);
       },
       act: (bloc) => bloc.add(LoginSuccessEvent(mockSession)),
       verify: (_) {
         // Assert that the token was safely written to hardware storage
-        verify(mockHardware.write(key: 'jwt_auth_token', value: 'mock_validated_jwt_token_string')).called(1);
+        verify(
+          mockHardware.write(
+            key: 'jwt_auth_token',
+            value: 'mock_validated_jwt_token_string',
+          ),
+        ).called(1);
       },
     );
   });

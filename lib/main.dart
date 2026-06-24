@@ -2,11 +2,26 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'core/theme/app_theme.dart';
 import 'logic/theme_bloc/theme_bloc.dart';
 import 'logic/auth_bloc/auth_bloc.dart';
+import 'presentation/dashboard_screen.dart';
 
-void main() {
+void main() async {
+  // 1. Ensure Flutter widget bindings are fully initialized before handling async startup routines
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // 2. Load the protected environment config parameters from memory assets
+  await dotenv.load(fileName: '.env');
+
+  // 3. Initialize the cloud engine securely using our environment abstractions
+  await Supabase.initialize(
+    url: dotenv.env['SUPABASE_URL'] ?? '',
+    publishableKey: dotenv.env['SUPABASE_ANON_KEY'] ?? '',
+  );
+
   runApp(const ChurchGearApp());
 }
 
@@ -39,15 +54,11 @@ class RootMaterialSelector extends StatelessWidget {
         return MaterialApp(
           title: 'Church Gear',
           debugShowCheckedModeBanner: false,
-          theme: AppTheme.getTheme(state.themeMode, isDarkMode: state.isDarkMode),
-          home: const Scaffold(
-            body: Center(
-              child: Text(
-                'Welcome to Church Gear',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-              ),
-            ),
+          theme: AppTheme.getTheme(
+            state.themeMode,
+            isDarkMode: state.isDarkMode,
           ),
+          home: const DashboardScreen(),
         );
       },
     );

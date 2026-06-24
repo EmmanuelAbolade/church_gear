@@ -8,7 +8,6 @@ import 'package:church_gear/core/theme/app_theme.dart';
 void main() {
   // Group opens a collection of related tests for our styling engine
   group('Church Gear Theme Engine Tests', () {
-    
     test('Default theme selection should return Cathedral configuration', () {
       // 1. Arrange: Define what we expect
       const expectedMode = AppThemeMode.cathedral;
@@ -21,13 +20,19 @@ void main() {
       expect(themeData.useMaterial3, isTrue);
     });
 
-    test('Midnight mode should explicitly enforce dark brightness parameters', () {
-      // Act: Fetch our high-efficiency dark profile
-      final themeData = AppTheme.getTheme(AppThemeMode.midnight, isDarkMode: true);
+    test(
+      'Midnight mode should explicitly enforce dark brightness parameters',
+      () {
+        // Act: Fetch our high-efficiency dark profile
+        final themeData = AppTheme.getTheme(
+          AppThemeMode.midnight,
+          isDarkMode: true,
+        );
 
-      // Assert: Verify it locks down deep dark mode features
-      expect(themeData.brightness, equals(Brightness.dark));
-      expect(themeData.scaffoldBackgroundColor, equals(Colors.black));
-    });
+        // Assert: Verify it locks down deep dark mode features
+        expect(themeData.brightness, equals(Brightness.dark));
+        expect(themeData.scaffoldBackgroundColor, equals(Colors.black));
+      },
+    );
   });
 }
