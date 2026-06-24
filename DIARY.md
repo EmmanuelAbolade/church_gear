@@ -48,3 +48,19 @@ A living ledger of architectural decisions, cryptographic security implementatio
 * **`auth_bloc_test.dart`:** Streams validated initial unauthenticated states, programmatic credential injection, and secure session clearing.
 * **Status:** 🟢 **100% PASS** (5 assertions verified successfully across the authentication layer).
 
+---
+## 🔒 Sprint 3: Cryptographic Token Cache & Hardware Storage
+**Date:** June 24, 2026
+
+### 🔹 Implementations Completed
+* **Storage Wrapper (`SecureStorageService`):** Created a hardware-level data storage abstraction layer encapsulating `flutter_secure_storage` to write, read, and delete secure keys.
+* **BLoC Integration:** Injected hardware caching mechanisms directly into `AuthBloc` lifecycle event routines (`LoginSuccessEvent` and `LogoutRequestedEvent`).
+* **Dependency Injection:** Enhanced the block class constructors to cleanly accept decoupled storage engine properties, preserving strict testing isolation constraints.
+
+### 🔹 Security & Cryptographic Controls
+* **Data-at-Rest Protection:** Bound the local storage engine directly to the device's hardware-encrypted subsystem (Keychain on iOS and Keystore on Android) to completely mitigate raw text cache extraction vulnerabilities.
+
+### 🔹 Automated Testing Status
+* **`secure_storage_test.dart`:** Utilized Mockito code generation profiles to verify physical write calls and validation fallback checks against simulated hardware pipelines.
+* **`auth_bloc_test.dart`:** Cross-layer tested mock state streams to guarantee runtime tokens pass down into storage hardware parameters flawlessly.
+* **Status:** 🟢 **100% PASS** (9 total assertions validated successfully across the global test grid).
