@@ -2,12 +2,13 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'core/theme/app_theme.dart';
 import 'logic/theme_bloc/theme_bloc.dart';
 import 'logic/auth_bloc/auth_bloc.dart';
 import 'presentation/dashboard_screen.dart';
+import 'presentation/auth_screen.dart';
 
 void main() async {
   // 1. Ensure Flutter widget bindings are fully initialized before handling async startup routines
@@ -50,15 +51,20 @@ class RootMaterialSelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<ThemeBloc, ThemeState>(
-      builder: (context, state) {
+      builder: (context, themeState) {
         return MaterialApp(
           title: 'Church Gear',
           debugShowCheckedModeBanner: false,
-          theme: AppTheme.getTheme(
-            state.themeMode,
-            isDarkMode: state.isDarkMode,
+          theme: AppTheme.getTheme(themeState.themeMode, isDarkMode: themeState.isDarkMode),
+          // Dynamically streams view states based on active cloud session verification status
+          home: BlocBuilder<AuthBloc, AuthState>(
+            builder: (context, AuthState authState) { // Explicit type annotation added
+              if (authState.status == AuthStatus.authenticated) {
+                return const DashboardScreen();
+              }
+              return const AuthScreen(); // Default fallback gateway
+            },
           ),
-          home: const DashboardScreen(),
         );
       },
     );

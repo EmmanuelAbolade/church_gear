@@ -11,8 +11,7 @@ class SecureStorageService {
   static const _tokenKey = 'jwt_auth_token';
 
   /// Dependency injection constructor allowing mock instances during test sweeps
-  const SecureStorageService({required FlutterSecureStorage storage})
-    : _storage = storage;
+  const SecureStorageService({required this._storage});
 
   /// Safely serializes and encrypts an active user authentication passport
   /// into the device's secure hardware storage tier.
