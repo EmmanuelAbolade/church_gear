@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'core/theme/app_theme.dart';
 import 'logic/theme_bloc/theme_bloc.dart';
+import 'logic/auth_bloc/auth_bloc.dart';
 
 void main() {
   runApp(const ChurchGearApp());
@@ -15,10 +16,12 @@ class ChurchGearApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Injecting the ThemeBloc right at the top of the widget tree 
-    // so every sub-screen can listen to it.
-    return BlocProvider(
-      create: (context) => ThemeBloc(),
+    // MultiBlocProvider initializes both engines simultaneously at the root level
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<ThemeBloc>(create: (context) => ThemeBloc()),
+        BlocProvider<AuthBloc>(create: (context) => AuthBloc()),
+      ],
       child: const RootMaterialSelector(),
     );
   }
@@ -36,7 +39,6 @@ class RootMaterialSelector extends StatelessWidget {
         return MaterialApp(
           title: 'Church Gear',
           debugShowCheckedModeBanner: false,
-          // Dynamically pulling the correct palette from our AppTheme matrix
           theme: AppTheme.getTheme(state.themeMode, isDarkMode: state.isDarkMode),
           home: const Scaffold(
             body: Center(

@@ -33,3 +33,18 @@ A living ledger of architectural decisions, cryptographic security implementatio
 * **Status:** 🟢 **100% PASS** (4 assertions verified successfully).
 
 ---
+
+## 🔐 Sprint 2: Multi-Tenant Session & Security Contract
+**Date:** June 24, 2026
+
+### 🔹 Implementations Completed
+* **Data Model (`UserSession`):** Authored a immutable multi-tenant data structure enforcing core boundaries across user identifiers, explicit cryptographic JWT string containment, and dedicated tenant ID tokens.
+* **Security Tiers (`UserRole`):** Mapped strict runtime authorization levels separating `guest`, `member`, and `admin` scopes.
+* **State Manager (`AuthBloc`):** Coded full session lifecycle controllers capable of stream-emitting state data changes for active logins and safe, non-leaking account logouts.
+* **Root Orchestrator:** Implemented `MultiBlocProvider` inside `main.dart` to link both layout structures and session variables uniformly down the widget tree.
+
+### 🔹 Automated Testing Status
+* **`user_session_test.dart`:** Verified JSON serialization and structural fallback configurations for guest identities.
+* **`auth_bloc_test.dart`:** Streams validated initial unauthenticated states, programmatic credential injection, and secure session clearing.
+* **Status:** 🟢 **100% PASS** (5 assertions verified successfully across the authentication layer).
+
