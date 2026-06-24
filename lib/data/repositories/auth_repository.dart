@@ -67,6 +67,8 @@ class SupabaseAuthRepository implements AuthRepository {
   /// into strongly-typed frontend compilation constraints.
   UserRole _mapRole(String role) {
     switch (role.toLowerCase()) {
+      case 'super_admin':
+        return UserRole.superAdmin;
       case 'admin':
         return UserRole.admin;
       case 'member':

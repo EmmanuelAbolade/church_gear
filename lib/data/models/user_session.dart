@@ -1,11 +1,7 @@
 // lib/data/models/user_session.dart
 
-/// Enumeration defining the absolute authorization tiers across
-/// the Church Gear multi-tenant ecosystem.
-enum UserRole { guest, member, admin }
+enum UserRole { superAdmin, admin, member, guest }
 
-/// Representational data entity containing current security tokens,
-/// active tenant tracking keys, and profile access vectors.
 class UserSession {
   final String userId;
   final String tenantId;
@@ -19,45 +15,41 @@ class UserSession {
     required this.jwtToken,
   });
 
-  /// Factory constructor to securely extract incoming identity structures
-  /// returned by our authentication server infrastructure.
-  factory UserSession.fromJson(Map<String, dynamic> json) {
-    // Helper mapper to safely transform raw role strings to robust types
-    final roleString = json['userRole'] as String?;
-    UserRole evaluatedRole;
-
-    switch (roleString?.toLowerCase()) {
-      case 'admin':
-        evaluatedRole = UserRole.admin;
-        break;
-      case 'member':
-        evaluatedRole = UserRole.member;
-        break;
-      case 'guest':
-      default:
-        evaluatedRole = UserRole.guest;
-    }
-
-    return UserSession(
-      userId: json['userId'] as String? ?? 'anonymous_guest',
-      tenantId: json['tenantId'] as String? ?? 'global_shared',
-      userRole: evaluatedRole,
-      jwtToken: json['jwtToken'] as String? ?? '',
-    );
-  }
-
-  /// Factory utility generating pristine, restricted-access parameters
-  /// for guest accounts browsing public tenant landing nodes.
-  factory UserSession.anonymous() {
+  /// Factory constructor matching your exact test-suite fallback expectations
+  factory UserSession.guest() {
     return const UserSession(
-      userId: 'anonymous_guest',
+      userId: 'anonymous_guest', // 🔍 FIXED: Restored to match your test spec
       tenantId: 'global_shared',
       userRole: UserRole.guest,
       jwtToken: '',
     );
   }
 
-  /// Evaluates whether this specific context instance maintains
-  /// an authorized cryptographic verification signature.
-  bool get isAuthenticated => jwtToken.isNotEmpty && userRole != UserRole.guest;
+  factory UserSession.anonymous() => UserSession.guest();
+
+  /// Deserializer that gracefully parses both full string types and clean enum names
+  factory UserSession.fromJson(Map<String, dynamic> json) {
+    final rawRole = json['userRole'] as String;
+
+    return UserSession(
+      userId: json['userId'] as String,
+      tenantId: json['tenantId'] as String,
+      userRole: UserRole.values.firstWhere(
+        (e) => e.toString() == rawRole || e.name == rawRole,
+        orElse: () => UserRole.guest,
+      ),
+      jwtToken: json['jwtToken'] as String,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'userId': userId,
+      'tenantId': tenantId,
+      'userRole': userRole.toString(),
+      'jwtToken': jwtToken,
+    };
+  }
+
+  bool get isAuthenticated => userRole != UserRole.guest && jwtToken.isNotEmpty;
 }
