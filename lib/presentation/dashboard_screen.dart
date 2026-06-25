@@ -10,6 +10,8 @@ import './media_metropolitan_view.dart';
 import '../core/theme/app_theme.dart';
 import '../data/models/church_member.dart';
 import './community_directory_view.dart';
+import '../data/repositories/sermon_repository.dart';
+import '../data/repositories/member_repository.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -26,61 +28,40 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final currentSession = context.watch<AuthBloc>().state.session;
     final isGuest = currentSession.userRole.name.toLowerCase() == 'guest';
 
-    // 1. Define dataset mimicking an active multi-tenant Supabase record stream
-    final dummySermons = [
-      const SermonMediaItem(
-        id: '1',
-        tenantId: 'global_shared',
-        title: 'The Blueprint of Honor',
-        speaker: 'Pastor Timothy Vance',
-        mediaUrl: '',
-        thumbnailUrl: '',
-        category: 'Leadership',
-      ),
-      const SermonMediaItem(
-        id: '2',
-        tenantId: 'global_shared',
-        title: 'Deep Waters of Faith',
-        speaker: 'Evangelist Sarah Jenkins',
-        mediaUrl: '',
-        thumbnailUrl: '',
-        category: 'Faith',
-      ),
-    ];
-
-    // Dummy member dataset mock row payload arrays
-    final dummyMembers = [
-      const ChurchMember(
-        id: 'mem_1',
-        tenantId: 'global_shared',
-        name: 'Alex Bruce',
-        role: 'Small Group Pastor',
-        imageUrl: '',
-        groupName: 'Young Adults Fellowship',
-      ),
-      const ChurchMember(
-        id: 'mem_2',
-        tenantId: 'global_shared',
-        name: 'Keji Alex',
-        role: 'Operations Lead',
-        imageUrl: '',
-        groupName: 'Media & Tech Ministry',
-      ),
-    ];
-
-    // 2. Read the current premium/standard layout profile matrix out of the ThemeBloc state
+    // 1. Read the current premium/standard layout profile matrix out of the ThemeBloc state
     final activeThemeMode = context.watch<ThemeBloc>().state.themeMode;
 
-    // 3. Dynamic screens array representing our 4 core modules
+    // 2. Read repository connection instances out of context providers
+    final sermonRepo = RepositoryProvider.of<SermonRepository>(context);
+    final memberRepo = RepositoryProvider.of<MemberRepository>(context);
+
+    // 3. Dynamic screens array representing our 4 core modules tied to live database streams
     final List<Widget> screens = [
-      // Module 1: Swaps presentation layouts dynamically based on church tier!
-      activeThemeMode == AppThemeMode.cathedral
-          ? MediaCathedralView(sermons: dummySermons)
-          : MediaMetropolitanView(sermons: dummySermons),
+      // 💡 Module 1: Swaps presentation layouts dynamically and listens to live Supabase sermon updates!
+      StreamBuilder<List<SermonMediaItem>>(
+        stream: sermonRepo.streamSermons(tenantId: currentSession.tenantId),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          final liveSermons = snapshot.data ?? [];
+          return activeThemeMode == AppThemeMode.cathedral
+              ? MediaCathedralView(sermons: liveSermons)
+              : MediaMetropolitanView(sermons: liveSermons);
+        },
+      ),
       
-      // Module 2: Community & Connection View Placeholder
-      CommunityDirectoryView(members: dummyMembers),
-      
+      // 💡 Module 2: Listens to live multi-tenant member roster shifts from your Supabase backend grid!
+      StreamBuilder<List<ChurchMember>>(
+        stream: memberRepo.streamMembers(tenantId: currentSession.tenantId),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          final liveMembers = snapshot.data ?? [];
+          return CommunityDirectoryView(members: liveMembers);
+        },
+      ),
 
       // Module 3: Operations & Engagement View Placeholder
       Center(

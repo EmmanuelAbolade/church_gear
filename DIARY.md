@@ -145,3 +145,8 @@ A living ledger of architectural decisions, cryptographic security implementatio
 - Automated Testing: Implemented a robust widget isolation test suite (`test/dashboard_screen_test.dart`) utilizing BLoC stream stubbing to verify error-free `BottomNavigationBar` viewport switching.
 - Dynamic Multi-Tier Layouts: Created custom `SermonMediaItem` data layer model and decoupled Module 1 presentation logic into standard `MediaCathedralView` and premium video-streaming `MediaMetropolitanView` layouts driven dynamically by the church's assigned `AppThemeMode`.
 - Unit & Widget Coverage: Added comprehensive schema tests in `test/sermon_media_item_test.dart` and layout mutation assertions to bring the sprint test matrix to a fully verified 15/15 green check status.
+- Community Infrastructure: Drafted the `ChurchMember` data model with safe type serialization to stream member profiles from multi-tenant backend scopes.
+- Roster Interface Matrix: Implemented `CommunityDirectoryView` utilizing a responsive grid system displaying profile card configurations, roles, and small group associations.
+- Navigation Validation: Updated `test/dashboard_screen_test.dart` to simulate viewport tab tapping, ensuring error-free widget layout swaps and rendering accuracy for the community hub.
+
+---

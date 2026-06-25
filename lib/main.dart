@@ -9,6 +9,8 @@ import 'logic/theme_bloc/theme_bloc.dart';
 import 'logic/auth_bloc/auth_bloc.dart';
 import 'presentation/dashboard_screen.dart';
 import 'presentation/auth_screen.dart';
+import 'data/repositories/sermon_repository.dart';
+import 'data/repositories/member_repository.dart';
 
 void main() async {
   // 1. Ensure Flutter widget bindings are fully initialized before handling async startup routines
@@ -32,13 +34,19 @@ class ChurchGearApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // MultiBlocProvider initializes both engines simultaneously at the root level
-    return MultiBlocProvider(
+    // Added MultiRepositoryProvider wrapper to feed real-time streams smoothly
+    return MultiRepositoryProvider(
       providers: [
-        BlocProvider<ThemeBloc>(create: (context) => ThemeBloc()),
-        BlocProvider<AuthBloc>(create: (context) => AuthBloc()),
+        RepositoryProvider<SermonRepository>(create: (_) => SermonRepository()),
+        RepositoryProvider<MemberRepository>(create: (_) => MemberRepository()),
       ],
-      child: const RootMaterialSelector(),
+      child: MultiBlocProvider(
+        providers: [
+          BlocProvider<ThemeBloc>(create: (context) => ThemeBloc()),
+          BlocProvider<AuthBloc>(create: (context) => AuthBloc()),
+        ],
+        child: const RootMaterialSelector(),
+      ),
     );
   }
 }
