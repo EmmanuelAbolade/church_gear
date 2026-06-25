@@ -4,6 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../logic/auth_bloc/auth_bloc.dart';
 import '../logic/theme_bloc/theme_bloc.dart';
+import '../data/models/sermon_media_item.dart';
+import './media_cathedral_view.dart';
+import './media_metropolitan_view.dart';
+import '../core/theme/app_theme.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -20,21 +24,37 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final currentSession = context.watch<AuthBloc>().state.session;
     final isGuest = currentSession.userRole.name.toLowerCase() == 'guest';
 
-    // 💡 Dynamic screens array representing our 4 core modules
-    final List<Widget> screens = [
-      // Module 1: Media & Discipleship View Placeholder
-      Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.video_library_outlined, size: 64, color: Colors.blue),
-            const SizedBox(height: 16),
-            Text('Media & Discipleship Hub', style: Theme.of(context).textTheme.titleLarge),
-            const SizedBox(height: 8),
-            Text(isGuest ? 'Streaming Public Sermon Archives (Guest Mode)' : 'Accessing Church Library'),
-          ],
-        ),
+    // 1. Define dataset mimicking an active multi-tenant Supabase record stream
+    final dummySermons = [
+      const SermonMediaItem(
+        id: '1',
+        tenantId: 'global_shared',
+        title: 'The Blueprint of Honor',
+        speaker: 'Pastor Timothy Vance',
+        mediaUrl: '',
+        thumbnailUrl: '',
+        category: 'Leadership',
       ),
+      const SermonMediaItem(
+        id: '2',
+        tenantId: 'global_shared',
+        title: 'Deep Waters of Faith',
+        speaker: 'Evangelist Sarah Jenkins',
+        mediaUrl: '',
+        thumbnailUrl: '',
+        category: 'Faith',
+      ),
+    ];
+
+    // 2. Read the current premium/standard layout profile matrix out of the ThemeBloc state
+    final activeThemeMode = context.watch<ThemeBloc>().state.themeMode;
+
+    // 3. Dynamic screens array representing our 4 core modules
+    final List<Widget> screens = [
+      // 💡 Module 1: Swaps presentation layouts dynamically based on church tier!
+      activeThemeMode == AppThemeMode.cathedral
+          ? MediaCathedralView(sermons: dummySermons)
+          : MediaMetropolitanView(sermons: dummySermons),
       
       // Module 2: Community & Connection View Placeholder
       Center(

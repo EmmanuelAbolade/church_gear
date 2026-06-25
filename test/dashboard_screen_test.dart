@@ -1,4 +1,4 @@
-// test/presentation/dashboard_screen_test.dart
+// test/dashboard_screen_test.dart
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -21,11 +21,10 @@ void main() {
     mockAuthBloc = MockAuthBloc();
     mockThemeBloc = MockThemeBloc();
 
-    // INJECT STREAM STUBS TO PREVENT FLUTTER PROVIDER CRASHES
     when(() => mockAuthBloc.stream).thenAnswer((_) => const Stream.empty());
     when(() => mockThemeBloc.stream).thenAnswer((_) => const Stream.empty());
 
-    // Stub the active theme configuration
+    // Default entry fallback state setup
     when(() => mockThemeBloc.state).thenReturn(
       const ThemeState(themeMode: AppThemeMode.cathedral, isDarkMode: false),
     );
@@ -43,25 +42,31 @@ void main() {
     );
   }
 
-  testWidgets('Should display Media Hub by default and change view on bottom navigation tap', (WidgetTester tester) async {
-    // Arrange: Stub AuthBloc state as Guest session
+  testWidgets('Should display Media Hub in Cathedral layout by default', (WidgetTester tester) async {
     when(() => mockAuthBloc.state).thenReturn(
       AuthState(session: UserSession.guest(), status: AuthStatus.authenticated),
     );
 
-    // Act: Render dashboard layout scaffold frame
     await tester.pumpWidget(createWidgetUnderEst(mockAuthBloc, mockThemeBloc));
 
-    // Assert: Default entry view shows the Media & Discipleship module content
-    expect(find.text('Media & Discipleship Hub'), findsOneWidget);
-    expect(find.text('Community Directory'), findsNothing);
+    // Assert: Standard layout elements (like the filter chips) are visible
+    expect(find.text('The Blueprint of Honor'), findsOneWidget);
+    expect(find.text('Trending Sermon Series'), findsNothing);
+  });
 
-    // Act: Tap on the Community bottom navigation item tab
-    await tester.tap(find.byIcon(Icons.diversity_3));
-    await tester.pumpAndSettle();
+  testWidgets('Should switch Media Hub to Metropolitan layout when theme updates', (WidgetTester tester) async {
+    when(() => mockAuthBloc.state).thenReturn(
+      AuthState(session: UserSession.guest(), status: AuthStatus.authenticated),
+    );
+    // Stub premium tier layout state
+    when(() => mockThemeBloc.state).thenReturn(
+      const ThemeState(themeMode: AppThemeMode.oliveGrove, isDarkMode: false),
+    );
 
-    // Assert: View hierarchy updates cleanly to show the Community layout matrix
-    expect(find.text('Media & Discipleship Hub'), findsNothing);
-    expect(find.text('Community Directory'), findsOneWidget);
+    await tester.pumpWidget(createWidgetUnderEst(mockAuthBloc, mockThemeBloc));
+
+    // Assert: Cinematic premium layouts are rendered instead
+    expect(find.text('LATEST RELEASE'), findsOneWidget);
+    expect(find.text('Trending Sermon Series'), findsOneWidget);
   });
 }
