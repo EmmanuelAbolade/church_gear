@@ -8,6 +8,8 @@ import '../data/models/sermon_media_item.dart';
 import './media_cathedral_view.dart';
 import './media_metropolitan_view.dart';
 import '../core/theme/app_theme.dart';
+import '../data/models/church_member.dart';
+import './community_directory_view.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -46,29 +48,39 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
     ];
 
+    // Dummy member dataset mock row payload arrays
+    final dummyMembers = [
+      const ChurchMember(
+        id: 'mem_1',
+        tenantId: 'global_shared',
+        name: 'Alex Bruce',
+        role: 'Small Group Pastor',
+        imageUrl: '',
+        groupName: 'Young Adults Fellowship',
+      ),
+      const ChurchMember(
+        id: 'mem_2',
+        tenantId: 'global_shared',
+        name: 'Keji Alex',
+        role: 'Operations Lead',
+        imageUrl: '',
+        groupName: 'Media & Tech Ministry',
+      ),
+    ];
+
     // 2. Read the current premium/standard layout profile matrix out of the ThemeBloc state
     final activeThemeMode = context.watch<ThemeBloc>().state.themeMode;
 
     // 3. Dynamic screens array representing our 4 core modules
     final List<Widget> screens = [
-      // 💡 Module 1: Swaps presentation layouts dynamically based on church tier!
+      // Module 1: Swaps presentation layouts dynamically based on church tier!
       activeThemeMode == AppThemeMode.cathedral
           ? MediaCathedralView(sermons: dummySermons)
           : MediaMetropolitanView(sermons: dummySermons),
       
       // Module 2: Community & Connection View Placeholder
-      Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.people_alt_outlined, size: 64, color: Colors.green),
-            const SizedBox(height: 16),
-            Text('Community Directory', style: Theme.of(context).textTheme.titleLarge),
-            const SizedBox(height: 8),
-            Text(isGuest ? 'Sign in to access interactive member directories' : 'Connected to Small Groups'),
-          ],
-        ),
-      ),
+      CommunityDirectoryView(members: dummyMembers),
+      
 
       // Module 3: Operations & Engagement View Placeholder
       Center(

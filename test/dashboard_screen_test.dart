@@ -24,7 +24,6 @@ void main() {
     when(() => mockAuthBloc.stream).thenAnswer((_) => const Stream.empty());
     when(() => mockThemeBloc.stream).thenAnswer((_) => const Stream.empty());
 
-    // Default entry fallback state setup
     when(() => mockThemeBloc.state).thenReturn(
       const ThemeState(themeMode: AppThemeMode.cathedral, isDarkMode: false),
     );
@@ -49,24 +48,38 @@ void main() {
 
     await tester.pumpWidget(createWidgetUnderEst(mockAuthBloc, mockThemeBloc));
 
-    // Assert: Standard layout elements (like the filter chips) are visible
     expect(find.text('The Blueprint of Honor'), findsOneWidget);
     expect(find.text('Trending Sermon Series'), findsNothing);
   });
 
-  testWidgets('Should switch Media Hub to Metropolitan layout when theme updates', (WidgetTester tester) async {
+  testWidgets('Should switch Media Hub to Premium layout when theme updates', (WidgetTester tester) async {
     when(() => mockAuthBloc.state).thenReturn(
       AuthState(session: UserSession.guest(), status: AuthStatus.authenticated),
     );
-    // Stub premium tier layout state
     when(() => mockThemeBloc.state).thenReturn(
       const ThemeState(themeMode: AppThemeMode.oliveGrove, isDarkMode: false),
     );
 
     await tester.pumpWidget(createWidgetUnderEst(mockAuthBloc, mockThemeBloc));
 
-    // Assert: Cinematic premium layouts are rendered instead
     expect(find.text('LATEST RELEASE'), findsOneWidget);
     expect(find.text('Trending Sermon Series'), findsOneWidget);
+  });
+
+  testWidgets('Should navigate to Community Directory and render roster entries successfully', (WidgetTester tester) async {
+    when(() => mockAuthBloc.state).thenReturn(
+      AuthState(session: UserSession.guest(), status: AuthStatus.authenticated),
+    );
+
+    await tester.pumpWidget(createWidgetUnderEst(mockAuthBloc, mockThemeBloc));
+
+    // Tap on the 'Community' navigation tab icon to change modules
+    await tester.tap(find.byIcon(Icons.diversity_3));
+    await tester.pumpAndSettle();
+
+    // Assert: Check that the header bar title and custom mock entries render flawlessly
+    expect(find.text('Directory Roster'), findsOneWidget);
+    expect(find.text('Alex Bruce'), findsOneWidget);
+    expect(find.text('Keji Alex'), findsOneWidget);
   });
 }
