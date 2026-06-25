@@ -2,10 +2,11 @@
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart'; // 💡 IMPORT ADDED
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../data/models/user_session.dart';
 import '../../data/repositories/auth_repository.dart';
 import '../../data/repositories/secure_storage_service.dart';
+import '../../data/models/registration_payload.dart';
 
 // --- Events ---
 abstract class AuthEvent extends Equatable {
@@ -31,6 +32,20 @@ class LoginWithEmailRequestedEvent extends AuthEvent {
 
 class LogoutRequestedEvent extends AuthEvent {}
 
+// Event Added
+class EnterAsGuestEvent extends AuthEvent {
+  const EnterAsGuestEvent();
+}
+
+class RegisterWithTenantRequestedEvent extends AuthEvent {
+  final RegistrationPayload payload;
+
+  const RegisterWithTenantRequestedEvent({required this.payload});
+
+  @override
+  List<Object?> get props => [payload];
+}
+
 // --- States ---
 enum AuthStatus { initial, loading, authenticated, unauthenticated, error }
 
@@ -47,6 +62,10 @@ class AuthState extends Equatable {
 
   factory AuthState.initial() =>
       AuthState(session: UserSession.anonymous(), status: AuthStatus.initial);
+
+  // 💡 Factory helper added to cleanly yield an authenticated guest block
+  factory AuthState.authenticated(UserSession session) =>
+      AuthState(session: session, status: AuthStatus.authenticated);
 
   AuthState copyWith({
     UserSession? session,
@@ -73,7 +92,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     AuthRepository? authRepository,
     SecureStorageService? secureStorageService,
   }) : _authRepository = authRepository ?? SupabaseAuthRepository(),
-       // Accurately passes required FlutterSecureStorage dependency instances
        _secureStorageService =
            secureStorageService ??
            const SecureStorageService(storage: FlutterSecureStorage()),
@@ -81,6 +99,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<CheckAuthStatusEvent>(_onCheckAuthStatus);
     on<LoginWithEmailRequestedEvent>(_onLoginWithEmailRequested);
     on<LogoutRequestedEvent>(_onLogoutRequested);
+    on<EnterAsGuestEvent>(_onEnterAsGuest); // 💡 Listener registered
+    on<RegisterWithTenantRequestedEvent>(_onRegisterWithTenantRequested);
   }
 
   Future<void> _onCheckAuthStatus(
@@ -89,12 +109,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     emit(state.copyWith(status: AuthStatus.loading));
     try {
-      // Plugs into your exact string lookup method
       final cachedToken = await _secureStorageService.getAuthToken();
 
       if (cachedToken != null && cachedToken.isNotEmpty) {
-        // Since we have a valid token, create an authenticated session frame
-        // (Our upcoming repository methods or dashboard will hydrate metadata later)
         final hydratedSession = UserSession(
           userId: 'cached_verified_user',
           tenantId: 'global_shared',
@@ -134,7 +151,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         password: event.password,
       );
 
-      // Extracts string payload property to match your persist pipeline
       await _secureStorageService.persistAuthToken(liveSession.jwtToken);
 
       emit(AuthState(session: liveSession, status: AuthStatus.authenticated));
@@ -155,8 +171,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(state.copyWith(status: AuthStatus.loading));
     try {
       await _authRepository.signOut();
-
-      // Plugs into your exact device removal call
       await _secureStorageService.deleteAuthToken();
 
       emit(
@@ -171,6 +185,39 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           status: AuthStatus.error,
           errorMessage:
               'Network cleanup failed, forced local session destruction applied.',
+        ),
+      );
+    }
+  }
+
+  // Worker logic added
+  Future<void> _onEnterAsGuest(
+    EnterAsGuestEvent event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthState.authenticated(UserSession.guest()));
+  }
+
+  // 🔽 INSERT THE REGISTRATION WORKER LOGIC DIRECTLY BENEATH IT:
+  Future<void> _onRegisterWithTenantRequested(
+    RegisterWithTenantRequestedEvent event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(state.copyWith(status: AuthStatus.loading));
+    try {
+      final freshSession = await _authRepository.signUpWithTenant(payload: event.payload);
+      
+      // Persist the token to secure storage if returned immediately
+      if (freshSession.jwtToken != 'awaiting_email_confirmation') {
+        await _secureStorageService.persistAuthToken(freshSession.jwtToken);
+      }
+      
+      emit(AuthState(session: freshSession, status: AuthStatus.authenticated));
+    } catch (e) {
+      emit(
+        state.copyWith(
+          status: AuthStatus.error,
+          errorMessage: e.toString().replaceAll('Exception: ', ''),
         ),
       );
     }

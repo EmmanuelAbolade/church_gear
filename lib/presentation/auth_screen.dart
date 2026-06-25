@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../logic/auth_bloc/auth_bloc.dart';
+import '../data/models/registration_payload.dart';
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
@@ -16,12 +17,18 @@ class _AuthScreenState extends State<AuthScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   
+  // 💡 NEW CONTROLLERS ADDED FOR MULTI-TENANT ONBOARDING
+  final _pastorNameController = TextEditingController();
+  final _churchNameController = TextEditingController();
+  
   bool _isLoginMode = true;
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _pastorNameController.dispose();
+    _churchNameController.dispose();
     super.dispose();
   }
 
@@ -36,9 +43,16 @@ class _AuthScreenState extends State<AuthScreen> {
         ),
       );
     } else {
-      // 💡 Registration request hooks will wire here next sprint block
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Registration flow initialization coming up next!')),
+      // CONNECTED DIRECTLY TO REGISTRATION PAYLOAD ENGINE
+      context.read<AuthBloc>().add(
+        RegisterWithTenantRequestedEvent(
+          payload: RegistrationPayload(
+            pastorName: _pastorNameController.text.trim(),
+            email: _emailController.text.trim(),
+            password: _passwordController.text.trim(),
+            churchName: _churchNameController.text.trim(),
+          ),
+        ),
       );
     }
   }
@@ -69,19 +83,58 @@ class _AuthScreenState extends State<AuthScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Icon(
-                      Icons.shield_outlined,
+                      _isLoginMode ? Icons.shield_outlined : Icons.app_registration_outlined,
                       size: 64,
                       color: Theme.of(context).colorScheme.primary,
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      _isLoginMode ? 'Welcome to Church Gear' : 'Create Account',
+                      _isLoginMode ? 'Welcome to Church Gear' : 'Create Church Workspace',
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                             fontWeight: FontWeight.bold,
                           ),
                     ),
                     const SizedBox(height: 32),
+                    
+                    // CONDITIONAL FIELD: PASTOR'S FULL NAME
+                    if (!_isLoginMode) ...[
+                      TextFormField(
+                        controller: _pastorNameController,
+                        decoration: const InputDecoration(
+                          labelText: 'Pastor / Admin Full Name',
+                          prefixIcon: Icon(Icons.person_outline),
+                          border: OutlineInputBorder(),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Please enter your name';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+
+                    // CONDITIONAL FIELD: CHURCH / TENANT NAME
+                    if (!_isLoginMode) ...[
+                      TextFormField(
+                        controller: _churchNameController,
+                        decoration: const InputDecoration(
+                          labelText: 'Church Name',
+                          prefixIcon: Icon(Icons.church_outlined),
+                          border: OutlineInputBorder(),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Please enter your church name';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+
                     TextFormField(
                       controller: _emailController,
                       decoration: const InputDecoration(
@@ -129,16 +182,31 @@ class _AuthScreenState extends State<AuthScreen> {
                       },
                     ),
                     const SizedBox(height: 16),
+                    
+                    // TOGGLE MODE BUTTON BUTTON
                     TextButton(
                       onPressed: () {
                         setState(() {
                           _isLoginMode = !_isLoginMode;
                         });
                       },
-                      child: Text(
-                        _isLoginMode
-                            ? 'Need an account? Register your church'
-                            : 'Already have an account? Sign In',
+                      child: Text(_isLoginMode 
+                        ? 'Need an account? Register your church' 
+                        : 'Already have a workspace? Sign In'
+                      ),
+                    ),
+                    
+                    const SizedBox(height: 8),
+                    TextButton(
+                      onPressed: () {
+                        context.read<AuthBloc>().add(const EnterAsGuestEvent());
+                      },
+                      child: const Text(
+                        'Explore as Guest',
+                        style: TextStyle(
+                          decoration: TextDecoration.underline,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ],

@@ -2,6 +2,7 @@
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/user_session.dart';
+import '../models/registration_payload.dart'; // 💡 IMPORT ADDED
 
 /// Abstract interface contract defining the required network methods
 /// for user authentication and session validation.
@@ -10,6 +11,11 @@ abstract class AuthRepository {
   Future<UserSession> signInWithEmail({
     required String email,
     required String password,
+  });
+
+  /// Provisions a new user account alongside a unique multi-tenant church workspace.
+  Future<UserSession> signUpWithTenant({
+    required RegistrationPayload payload,
   });
 
   /// Terminates the remote session network state cleanly.
@@ -55,6 +61,41 @@ class SupabaseAuthRepository implements AuthRepository {
       tenantId: tenantId,
       userRole: _mapRole(userRoleString),
       jwtToken: session.accessToken,
+    );
+  }
+
+  @override
+  Future<UserSession> signUpWithTenant({
+    required RegistrationPayload payload,
+  }) async {
+    // 1. Execute account creation with custom tenant metadata injected
+    final AuthResponse response = await _supabaseClient.auth.signUp(
+      email: payload.email,
+      password: payload.password,
+      data: {
+        'full_name': payload.pastorName,
+        'church_name': payload.churchName,
+        'tenant_id': payload.derivedTenantId, // Multi-tenant namespace routing key
+        'user_role': 'admin',                 // Registering pastor is designated Tenant Admin
+      },
+    );
+
+    final session = response.session;
+    final user = response.user;
+
+    if (user == null) {
+      throw Exception('Registration failed: Cloud provider rejected account initialization.');
+    }
+
+    // 2. If email confirmation is disabled in Supabase, a session is returned immediately.
+    // Otherwise, we fallback to an initial registration session token frame.
+    final token = session?.accessToken ?? 'awaiting_email_confirmation';
+
+    return UserSession(
+      userId: user.id,
+      tenantId: payload.derivedTenantId,
+      userRole: UserRole.admin,
+      jwtToken: token,
     );
   }
 

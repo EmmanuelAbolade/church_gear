@@ -58,7 +58,6 @@ class AppTheme {
         );
 
       case AppThemeMode.cathedral:
-      default:
         return _buildTheme(
           brightness: isDarkMode ? Brightness.dark : Brightness.light,
           primary: const Color(0xFF1A365D), // Deep Cathedral Navy

@@ -112,3 +112,15 @@ A living ledger of architectural decisions, cryptographic security implementatio
 * **Test Suite Verification:** Confirmed stable compilation across all modules.
 * **Status:** 🟢 **100% PASS** (11 total assertions running cleanly).
 
+---
+
+## [Sprint 8] - Multi-Tenant Onboarding & Core Presentation Shell
+### Completed
+- Fixed Web Bootstrap Crash: Injected the missing Passkeys Web SDK dependency tag inside `web/index.html` to eliminate the runtime engine crash.
+- Data Integration: Added `RegistrationPayload` model to compile, sanitize, and derive safe string `tenantId` parameters from raw input.
+- Repository Layer: Expanded `AuthRepository` and `SupabaseAuthRepository` with the `signUpWithTenant` asynchronous network pipeline.
+- State Engine Logic: Registered `EnterAsGuestEvent` and `RegisterWithTenantRequestedEvent` handlers inside `AuthBloc` to drive tenant provisioning.
+- Interface Refactor: Transformed `auth_screen.dart` into a fluid state-toggle workspace supporting both Sign-In and Church Registration paths.
+
+---
+
