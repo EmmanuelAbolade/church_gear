@@ -135,3 +135,13 @@ A living ledger of architectural decisions, cryptographic security implementatio
 
 ---
 
+## [Sprint 8] - Multi-Tenant Onboarding & Core Presentation Shell
+### Completed
+- Fixed Web Bootstrap Crash: Injected the missing Passkeys Web SDK dependency tag inside `web/index.html` to eliminate the runtime engine crash.
+- Data Integration: Added `RegistrationPayload` model to compile, sanitize, and derive safe string `tenantId` parameters from raw input.
+- Repository Layer: Expanded `AuthRepository` and `SupabaseAuthRepository` with the `signUpWithTenant` asynchronous network pipeline.
+- State Engine Logic: Registered `EnterAsGuestEvent` and `RegisterWithTenantRequestedEvent` handlers inside `AuthBloc` to drive tenant provisioning.
+- Interface Refactor: Transformed `auth_screen.dart` into a fluid state-toggle workspace supporting both Sign-In and Church Registration paths.
+- Automated Testing: Implemented a robust widget isolation test suite (`test/dashboard_screen_test.dart`) utilizing BLoC stream stubbing to verify error-free `BottomNavigationBar` viewport switching.
+- Dynamic Multi-Tier Layouts: Created custom `SermonMediaItem` data layer model and decoupled Module 1 presentation logic into standard `MediaCathedralView` and premium video-streaming `MediaMetropolitanView` layouts driven dynamically by the church's assigned `AppThemeMode`.
+- Unit & Widget Coverage: Added comprehensive schema tests in `test/sermon_media_item_test.dart` and layout mutation assertions to bring the sprint test matrix to a fully verified 15/15 green check status.

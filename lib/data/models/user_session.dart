@@ -1,8 +1,10 @@
 // lib/data/models/user_session.dart
 
+import 'package:equatable/equatable.dart';
+
 enum UserRole { superAdmin, admin, member, guest }
 
-class UserSession {
+class UserSession extends Equatable {
   final String userId;
   final String tenantId;
   final UserRole userRole;
@@ -52,4 +54,8 @@ class UserSession {
   }
 
   bool get isAuthenticated => userRole != UserRole.guest && jwtToken.isNotEmpty;
+
+  // Injected value-comparison property matrix
+  @override
+  List<Object?> get props => [userId, tenantId, userRole, jwtToken];
 }
