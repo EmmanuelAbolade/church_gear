@@ -150,3 +150,13 @@ A living ledger of architectural decisions, cryptographic security implementatio
 - Navigation Validation: Updated `test/dashboard_screen_test.dart` to simulate viewport tab tapping, ensuring error-free widget layout swaps and rendering accuracy for the community hub.
 
 ---
+- Visual Identity Matrix: Scaled `AppThemeMode` enumeration to support all 10 distinct workspace styles, utilizing clean factory-based matching to calculate Material 3 palettes automatically.
+- Live Layout Customizer: Implemented an interactive list tile configuration dashboard inside Module 4, giving administrators real-time lookups and active checks for theme variations.
+- Test Matching Parity: Corrected `test/theme_engine_test.dart` parameters to transition from strict hex value comparisons to modern high-level dark theme brightness verification checks.
+
+---
+
+### Sprint 8 Update (Continued) - June 2026
+- **Activity**: Fixed mobile layout bugs and unified data layer parameters.
+- **Task**: Refactored `admin_control_screen.dart` from a broken side-by-side desktop layout to a responsive, mobile-first vertical list with an adaptive modal bottom sheet form factor.
+- **Status**: Zero compiler errors, verified real-time `StreamBuilder` connection to Supabase cloud tables. Ready for clean staging.

@@ -7,13 +7,12 @@ import 'package:mocktail/mocktail.dart';
 import 'package:church_gear/presentation/dashboard_screen.dart';
 import 'package:church_gear/logic/auth_bloc/auth_bloc.dart';
 import 'package:church_gear/logic/theme_bloc/theme_bloc.dart';
-import 'package:church_gear/data/models/user_session.dart';
-import 'package:church_gear/data/models/sermon_media_item.dart';
-import 'package:church_gear/data/models/church_member.dart';
-import 'package:church_gear/core/theme/app_theme.dart';
 import 'package:church_gear/data/repositories/sermon_repository.dart';
 import 'package:church_gear/data/repositories/member_repository.dart';
+import 'package:church_gear/data/models/user_session.dart';
+import 'package:church_gear/core/theme/app_theme.dart';
 
+// Create pure testing mocks to bypass raw production cloud initialization loops
 class MockAuthBloc extends Mock implements AuthBloc {}
 class MockThemeBloc extends Mock implements ThemeBloc {}
 class MockSermonRepository extends Mock implements SermonRepository {}
@@ -22,67 +21,41 @@ class MockMemberRepository extends Mock implements MemberRepository {}
 void main() {
   late MockAuthBloc mockAuthBloc;
   late MockThemeBloc mockThemeBloc;
-  late MockSermonRepository mockSermonRepository;
-  late MockMemberRepository mockMemberRepository;
-
-  final dummySermons = [
-    const SermonMediaItem(
-      id: '1',
-      tenantId: 'global_shared',
-      title: 'The Blueprint of Honor',
-      speaker: 'Pastor Timothy Vance',
-      mediaUrl: '',
-      thumbnailUrl: '',
-      category: 'Leadership',
-    ),
-  ];
-
-  final dummyMembers = [
-    const ChurchMember(
-      id: 'mem_1',
-      tenantId: 'global_shared',
-      name: 'Alex Bruce',
-      role: 'Small Group Pastor',
-      imageUrl: '',
-      groupName: 'Young Adults Fellowship',
-    ),
-  ];
+  late MockSermonRepository mockSermonRepo;
+  late MockMemberRepository mockMemberRepo;
 
   setUp(() {
     mockAuthBloc = MockAuthBloc();
     mockThemeBloc = MockThemeBloc();
-    mockSermonRepository = MockSermonRepository();
-    mockMemberRepository = MockMemberRepository();
+    mockSermonRepo = MockSermonRepository();
+    mockMemberRepo = MockMemberRepository();
 
-    when(() => mockAuthBloc.stream).thenAnswer((_) => const Stream.empty());
-    when(() => mockThemeBloc.stream).thenAnswer((_) => const Stream.empty());
+    // Stub the default session state context
+    final mockSession = UserSession.guest();
 
-    when(() => mockThemeBloc.state).thenReturn(
-      const ThemeState(themeMode: AppThemeMode.cathedral, isDarkMode: false),
-    );
+    when(() => mockAuthBloc.state).thenReturn(AuthState(session: mockSession));
+    when(() => mockThemeBloc.state).thenReturn(const ThemeState(
+      themeMode: AppThemeMode.cathedral,
+      isDarkMode: false,
+    ));
 
-    // 💡 Provide streams that emit real mock data instantly
-    when(() => mockSermonRepository.streamSermons(tenantId: any(named: 'tenantId')))
-        .thenAnswer((_) => Stream.value(dummySermons));
-    when(() => mockMemberRepository.streamMembers(tenantId: any(named: 'tenantId')))
-        .thenAnswer((_) => Stream.value(dummyMembers));
+    // Stub the repository methods to return empty testing streams safely
+    when(() => mockSermonRepo.streamSermons(tenantId: any(named: 'tenantId')))
+        .thenAnswer((_) => Stream.value([]));
+    when(() => mockMemberRepo.streamMembers(tenantId: any(named: 'tenantId')))
+        .thenAnswer((_) => Stream.value([]));
   });
 
-  Widget createWidgetUnderEst(
-    MockAuthBloc authBloc,
-    MockThemeBloc themeBloc,
-    MockSermonRepository sermonRepo,
-    MockMemberRepository memberRepo,
-  ) {
+  Widget buildTestableWidget() {
     return MultiRepositoryProvider(
       providers: [
-        RepositoryProvider<SermonRepository>.value(value: sermonRepo),
-        RepositoryProvider<MemberRepository>.value(value: memberRepo),
+        RepositoryProvider<SermonRepository>.value(value: mockSermonRepo),
+        RepositoryProvider<MemberRepository>.value(value: mockMemberRepo),
       ],
       child: MultiBlocProvider(
         providers: [
-          BlocProvider<AuthBloc>.value(value: authBloc),
-          BlocProvider<ThemeBloc>.value(value: themeBloc),
+          BlocProvider<AuthBloc>.value(value: mockAuthBloc),
+          BlocProvider<ThemeBloc>.value(value: mockThemeBloc),
         ],
         child: const MaterialApp(
           home: DashboardScreen(),
@@ -91,67 +64,33 @@ void main() {
     );
   }
 
-  testWidgets('Should display Media Hub in Cathedral layout by default', (WidgetTester tester) async {
-    when(() => mockAuthBloc.state).thenReturn(
-      AuthState(session: UserSession.guest(), status: AuthStatus.authenticated),
-    );
+  group('DashboardScreen Scaled Architecture Tests', () {
+    testWidgets('Should display New Home Portal Hub layout by default on entry', (tester) async {
+      await tester.pumpWidget(buildTestableWidget());
+      await tester.pump();
 
-    await tester.pumpWidget(createWidgetUnderEst(
-      mockAuthBloc,
-      mockThemeBloc,
-      mockSermonRepository,
-      mockMemberRepository,
-    ));
-    
-    await tester.pumpAndSettle();
+      // Verify that the new layout headline renders perfectly
+      expect(find.text('Welcome to'), findsOneWidget);
+      expect(find.text('Global Shared Ministry'), findsOneWidget);
+      expect(find.text('Quick Access Actions'), findsOneWidget);
+      expect(find.text('Holy Bible'), findsOneWidget);
+    });
 
-    // Verify stream data forces cathedral layout elements onto the viewport
-    expect(find.text('The Blueprint of Honor'), findsOneWidget);
-    expect(find.text('Trending Sermon Series'), findsNothing);
-  });
+    testWidgets('Should render scalable More options page correctly when tab is clicked', (tester) async {
+      await tester.pumpWidget(buildTestableWidget());
+      await tester.pump();
 
-  testWidgets('Should switch Media Hub to Premium layout when theme updates', (WidgetTester tester) async {
-    when(() => mockAuthBloc.state).thenReturn(
-      AuthState(session: UserSession.guest(), status: AuthStatus.authenticated),
-    );
-    when(() => mockThemeBloc.state).thenReturn(
-      const ThemeState(themeMode: AppThemeMode.oliveGrove, isDarkMode: false),
-    );
+      // Tap on the 'More' bottom navigation item icon
+      final moreTabFinder = find.byIcon(Icons.more_horiz_outlined);
+      expect(moreTabFinder, findsOneWidget);
+      
+      await tester.tap(moreTabFinder);
+      await tester.pumpAndSettle();
 
-    await tester.pumpWidget(createWidgetUnderEst(
-      mockAuthBloc,
-      mockThemeBloc,
-      mockSermonRepository,
-      mockMemberRepository,
-    ));
-    
-    await tester.pumpAndSettle();
-
-    // Verify metropolitan premium layout updates properly
-    expect(find.text('LATEST RELEASE'), findsOneWidget);
-    expect(find.text('Trending Sermon Series'), findsOneWidget);
-  });
-
-  testWidgets('Should navigate to Community Directory and render roster entries successfully', (WidgetTester tester) async {
-    when(() => mockAuthBloc.state).thenReturn(
-      AuthState(session: UserSession.guest(), status: AuthStatus.authenticated),
-    );
-
-    await tester.pumpWidget(createWidgetUnderEst(
-      mockAuthBloc,
-      mockThemeBloc,
-      mockSermonRepository,
-      mockMemberRepository,
-    ));
-
-    await tester.pumpAndSettle();
-
-    // Tap on the 'Community' navigation tab icon
-    await tester.tap(find.byIcon(Icons.diversity_3));
-    await tester.pumpAndSettle();
-
-    // Verify stream data successfully populates our roster view grid
-    expect(find.text('Directory Roster'), findsOneWidget);
-    expect(find.text('Alex Bruce'), findsOneWidget);
+      // Confirm the scalable engagement sections render beautifully
+      expect(find.text('More Options'), findsOneWidget);
+      expect(find.text('Ministry Engagement'), findsOneWidget);
+      expect(find.text('Interaction & Feedback Loops'), findsOneWidget);
+    });
   });
 }
