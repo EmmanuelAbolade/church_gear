@@ -37,7 +37,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     // 3. Dynamic screens array representing our 4 core modules tied to live database streams
     final List<Widget> screens = [
-      // 💡 Module 1: Swaps presentation layouts dynamically and listens to live Supabase sermon updates!
+      // Module 1: Swaps presentation layouts dynamically and listens to live Supabase sermon updates!
       StreamBuilder<List<SermonMediaItem>>(
         stream: sermonRepo.streamSermons(tenantId: currentSession.tenantId),
         builder: (context, snapshot) {
@@ -51,7 +51,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         },
       ),
       
-      // 💡 Module 2: Listens to live multi-tenant member roster shifts from your Supabase backend grid!
+      // Module 2: Listens to live multi-tenant member roster shifts from your Supabase backend grid!
       StreamBuilder<List<ChurchMember>>(
         stream: memberRepo.streamMembers(tenantId: currentSession.tenantId),
         builder: (context, snapshot) {
@@ -75,53 +75,95 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
       ),
 
-      // Module 4: Settings & Configuration Hub
+      // Module 4: Settings & Configuration Hub (10-Theme Customizer Engine)
       Padding(
-        padding: const EdgeInsets.all(24.0),
+        padding: const EdgeInsets.symmetric(horizontal: 16.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(Icons.badge_outlined, size: 64, color: Theme.of(context).colorScheme.secondary),
-            const SizedBox(height: 16),
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 16.0),
+              child: Text(
+                'System Settings',
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+              ),
+            ),
             Card(
               child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
+                padding: const EdgeInsets.all(12.0),
+                child: Row(
                   children: [
-                    Text('User Identity ID: ${currentSession.userId}'),
-                    const SizedBox(height: 4),
-                    Text('Active Workspace Tenant: ${currentSession.tenantId}'),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Access Scope: ${currentSession.userRole.name.toUpperCase()}',
-                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    const Icon(Icons.badge_outlined, size: 40),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Tenant Workspace: ${currentSession.tenantId}', style: const TextStyle(fontSize: 12)),
+                          Text('Role Scope: ${currentSession.userRole.name.toUpperCase()}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
+                        ],
+                      ),
                     ),
+                    BlocBuilder<ThemeBloc, ThemeState>(
+                      builder: (context, themeState) {
+                        return IconButton(
+                          icon: Icon(themeState.isDarkMode ? Icons.dark_mode : Icons.light_mode),
+                          onPressed: () {
+                            context.read<ThemeBloc>().add(ChangeThemeEvent(
+                              themeMode: themeState.themeMode,
+                              isDarkMode: !themeState.isDarkMode,
+                            ));
+                          },
+                        );
+                      },
+                    )
                   ],
                 ),
               ),
             ),
-            const SizedBox(height: 24),
-            BlocBuilder<ThemeBloc, ThemeState>(
-              builder: (context, themeState) {
-                return SwitchListTile(
-                  title: const Text('Dark Mode Intensity'),
-                  value: themeState.isDarkMode,
-                  onChanged: (value) {
-                    context.read<ThemeBloc>().add(
-                          ChangeThemeEvent(
-                            themeMode: themeState.themeMode,
-                            isDarkMode: value,
+            const Padding(
+              padding: EdgeInsets.only(top: 16.0, bottom: 8.0, left: 4.0),
+              child: Text('Workspace Theme Presets', style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
+            Expanded(
+              child: BlocBuilder<ThemeBloc, ThemeState>(
+                builder: (context, themeState) {
+                  return ListView.builder(
+                    itemCount: AppThemeMode.values.length,
+                    itemBuilder: (context, index) {
+                      final currentMode = AppThemeMode.values[index];
+                      final isSelected = themeState.themeMode == currentMode;
+                      
+                      return Card(
+                        color: isSelected ? Theme.of(context).colorScheme.primaryContainer : null,
+                        margin: const EdgeInsets.symmetric(vertical: 4),
+                        child: ListTile(
+                          leading: CircleAvatar(
+                            backgroundColor: AppTheme.getTheme(currentMode, isDarkMode: themeState.isDarkMode).colorScheme.primary,
+                            radius: 12,
                           ),
-                        );
-                  },
-                );
-              },
+                          title: Text(
+                            currentMode.name.replaceAllMapped(RegExp(r'(^[a-z]|[A-Z])'), (match) => ' ${match.group(0)?.toUpperCase()}').trim(),
+                            style: TextStyle(fontWeight: isSelected ? FontWeight.bold : FontWeight.normal),
+                          ),
+                          trailing: isSelected ? const Icon(Icons.check_circle, color: Colors.green) : null,
+                          onTap: () {
+                            context.read<ThemeBloc>().add(ChangeThemeEvent(
+                              themeMode: currentMode,
+                              isDarkMode: themeState.isDarkMode,
+                            ));
+                          },
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
             ),
           ],
         ),
       ),
     ];
-
     return Scaffold(
       appBar: AppBar(
         title: Text(isGuest ? 'Church Gear (Guest Mode)' : 'Church Gear Workspace'),

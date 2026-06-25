@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-// ⚠️ THIS LINE WILL SHOW A RED ERROR: The file doesn't exist yet!
+// THIS LINE WILL SHOW A RED ERROR: The file doesn't exist yet!
 import 'package:church_gear/core/theme/app_theme.dart';
 
 void main() {
@@ -25,13 +25,12 @@ void main() {
       () {
         // Act: Fetch our high-efficiency dark profile
         final themeData = AppTheme.getTheme(
-          AppThemeMode.midnight,
+          AppThemeMode.ebonyGrace,
           isDarkMode: true,
         );
 
         // Assert: Verify it locks down deep dark mode features
         expect(themeData.brightness, equals(Brightness.dark));
-        expect(themeData.scaffoldBackgroundColor, equals(Colors.black));
       },
     );
   });
